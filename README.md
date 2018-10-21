@@ -1,7 +1,7 @@
 # v5 wallet upgrade
 
 ## Index
-- Project description
+- [Project description](#project-description)
 - Web3 Secret Storage Definition
 - Proposed improvements
   - Key Derivation Function (KDF)
