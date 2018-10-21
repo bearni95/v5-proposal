@@ -127,10 +127,36 @@ JSON is a great standard format for computer applications. It is easy to interpr
 
 The [RLP (Recursive Length Prefix)](https://github.com/ethereum/wiki/wiki/RLP) encoding and decoding mechanism has been added to ease the usage on static tags.
 
+A layer of encoding has been added, along with lookup tables to reduce the characters needed to store a v5 wallet.
+
+base64 : `+IuCMDK4QGNjZGU4NTFlYjk3MWE0ZjQ0YjFlMDI3ODU2NjFkZDZlNGUzZTg5MzQ5MzBmZTU5Nzc3MjkxMTFhMWNiMTEwNzZNgjAwuEA3ZTk5YzI1MjEzNThhMGMyNmQyYWU4MTliY2JjZjc4ZTBkNjg4MmRkODE2NmVmN2MwNDA4NDJiYmM5ZTEwZmNk`
+
+hex : `f88b823032b840636364653835316562393731613466343462316530323738353636316464366534653365383933343933306665353937373732393131316131636231313037364d823030b84037653939633235323133353861306332366432616538313962636263663738653064363838326464383136366566376330343038343262626339653130666364`
+
+QR:
+
+![Base64](./docs/img/base64-qr.png "Base64")
+
 ### Payload
 Arbitrary data can now be added and encrypted to transport user related data (username, email, ...) and their corresponding signatures. This powers our offchain p2p trust engine.
 
+The payload is an array of `Item` objects of the following structure:
+```javascript
+const Item = {
+  owner : '0x000000000000000000000000000000000000000a',
+  issuer : '0x000000000000000000000000000000000000000b',
+  data : { ... },
+  hash : '0xb398f54cb8565f2e963e8c74cd9cfe760ff6fe831c2579e2a9d095e6da62e342',
+  signature : '0x8b552c4cbafd630c492724b831414f79702fd90da1bf0ee3ac2fd3af69ae910a'
+}
+```
+- `owner` : Address of the wallet the Item references.
+- `issuer` : Address of the wallet to issue the Item.
+- `data` : Key-value field, JSON serializable.
+- `hash` : keccak256( owner ++ issuer ++ JSON.stringify(data) ).
+- `signature` : Signed hash by the issuer.
+
 ### Metadata
-- The `mac` field has been replaced by `checksum`, composed of `keccak256(address ++ ciphertext)`.
+- The `mac` field has been renamed by `checksum`.
 - The `version` has been raised to 5.
 - The `id` field has been removed.
