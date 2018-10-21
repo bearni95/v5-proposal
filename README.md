@@ -2,12 +2,18 @@
 
 ## Index
 - [Project description](#project-description)
-- Web3 Secret Storage Definition
-- Proposed improvements
-  - Key Derivation Function (KDF)
-  - Encryption Algorithm
-  - RLP serialization
-  - Metadata
+- [Web3 Secret Storage Definition](#web3-secret-storage-definition)
+  - [KDF](#kdf)
+  - [Cipher](#cipher)
+  - [Metadata](#metadata)
+- [Proposed improvements](#proposed-improvements)
+  - [JSON example](#json-example)
+  - [Extended Key Derivation Functions](#extended-key-derivation-functions)
+  - [Extended encryption algorithms](#extended-encryption-algorithms)
+  - [RLP serialization](#rlp-serialization)
+  - [Payload](#payload)
+  - [Updated metadata](#updated-metadata)
+
 
 ## Project description
 [Web3 Secret Storage Definition](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) is the standarized format Ethereum clients use to store private keys on disk. The current implementation is v3.
@@ -19,7 +25,7 @@ The objective of v5 is to extend the properties, functionalities and application
 - IoT identities
 - Self-sovereign user systems
 
-## The Web3 Secret Storage Definition
+## Web3 Secret Storage Definition
 Since exposing private keys is a bad practice they are encrypted with a user-provided password. In order to secure the given password a KDF or [Key Derivation Function](https://en.wikipedia.org/wiki/Key_derivation_function).
 
 The flow to generate a v3 json is:
@@ -70,7 +76,7 @@ The content can be split into 3 blocks
 ## Proposed improvements
 The v5 standard extends the key derivation functions, encryption algorithms and encoding options available.
 
-### JSON example of v5
+### JSON example
 ```JSON
 {
   "crypto": {
@@ -93,7 +99,7 @@ The v5 standard extends the key derivation functions, encryption algorithms and 
 }
 ```
 
-### Extended Key Derivation Functions (KDF)
+### Extended Key Derivation Functions
 `PBKDF2` and `scrypt` are consuming algorithms; they require high specs to run fast. When executed on web browsers, mobile phones or IoT devices they can take a long time (almost a minute!) to derive a key. That means that each time a user wants to use their private key (sign a transaction) they will be required to wait a while to just figure it out.
 
 Back in 2015 [`argon2`](https://github.com/p-h-c/phc-winner-argon2) won the [Password Hashing Competition](https://password-hashing.net/), an open competition inspired by the NIST's AES and SHA-3. Their objective was to establish a standard key derivation function that would fulfil the needs of modern applications on a secure way.
@@ -156,7 +162,7 @@ const Item = {
 - `hash` : keccak256( owner ++ issuer ++ JSON.stringify(data) ).
 - `signature` : Signed hash by the issuer.
 
-### Metadata
+### Updated metadata
 - The `mac` field has been renamed by `checksum`.
 - The `version` has been raised to 5.
 - The `id` field has been removed.
