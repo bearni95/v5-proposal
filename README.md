@@ -1,6 +1,9 @@
-# v5 wallet upgrade
+# v5 Wallets & UserPass
 
 ## Index
+- [UserPass](#userpass)
+  - [Chosen technologies](#chosen-technologies)
+  - [Design](#design)
 - [Project description](#project-description)
 - [Web3 Secret Storage Definition](#web3-secret-storage-definition)
   - [KDF](#kdf)
@@ -14,6 +17,65 @@
   - [Payload](#payload)
   - [Updated metadata](#updated-metadata)
 
+## UserPass
+
+Introducing the extension that turns v5 wallets into an interesting project!
+
+UserPass is a cryptographic schema for derivating private keys from a combination of username and password. No authorization entities nor authorities, just self-sovereign creation of wallets using a more familiar system for the average user than the seed words.
+
+Existing solutions as v3 wallets, raw private keys and mnemonis present a series of usability flaws:
+- The mnemonic needs to be stored offline. It is needed for account recovery.
+- The private key is sensitive to the system where it is being derived.
+- The private key needs to stay stored (encrypted) in a device for access.
+- Accessing the wallet from a new system (public computers, friends phones, ...) is complicated and a non-trivial process
+
+UserPass intends to mitigate all of these issues using a combination of username/email and password to cryptographically derive a wallet. I know, it sounds absurdly insecure, but keep on reading.
+
+### Chosen technologies
+To safely use user-provided input as cryptographic keys we need a Key Derivation Function (KDF). Ethereum's v3 wallets use either PBKDF2 or scrypt. Both are secure and have been running for a long time but when executed on web browsers, mobile phones or IoT devices they can take a long time (almost a minute!) to derive a key.
+
+Besides from the KDF there is also a need for a hashing function that will help put together all the bits and pieces. Our choice is the shake256 algorithm from the SHA-3 family. It is an algorithm of variable output size, which will come in handy later on.
+
+### Design
+UserPass takes any given combination of username/email and password to generate a private key.
+
+First off, we'll create the Cross Salts. Argon2 needs a salt argument to be fed, along with the word to derive, to operate.
+
+We'll be creating a private key for our user `jdoe` with password `123456`
+
+```javascript
+let username = 'jdoe'
+let password = '123456'
+
+let hashedUsername = shake256(username, 512)
+let hashedPassword = shake256(password, 512)
+
+let user = argon2(username, {salt : hashedPassword})
+let pass = argon2(password, {salt : hashedUsername})
+```
+
+The `base64` encoding of `user` and `pass` will now be used to derive our beloved wallet:
+
+```javascript
+let salt = shake256(user + pass + 'salt', 512)
+let userpass = argon2(user + pass, {salt})
+```
+
+You got your UserPass! Let's turn it into a wallet:
+
+```javascript
+let privateKey = shake256(userpass, 256)
+let account = web3.eth.account.privateKeyToAccount(privateKey)
+```
+
+And there you go! A fresh, ready to operate wallet.
+
+### Security considerations
+Weak/short password or known combinations of username-passwords are the major threat to the integrity of wallets. That is why enforcing secure, unique passwords and promoting the use of emails over simple usernames would be useful.
+
+```
+This section is still under heavy development and analysis.
+```
 
 ## Project description
 [Web3 Secret Storage Definition](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) is the standarized format Ethereum clients use to store private keys on disk. The current implementation is v3.
@@ -163,6 +225,6 @@ const Item = {
 - `signature` : Signed hash by the issuer.
 
 ### Updated metadata
-- The `mac` field has been renamed by `checksum`.
+- The `mac` field has been renamed `checksum`.
 - The `version` has been raised to 5.
 - The `id` field has been removed.
